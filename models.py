@@ -50,6 +50,8 @@ class DoubleConvBlock(nn.Module):
             )
             self.down_sample = False
         elif in_size * 2 == out_size:
+            if self.shortcut:
+                assert option is not None, 'Must specify an option when downscaling with a shortcut'
             self.model = nn.Sequential(
                 nn.Conv2d(in_size, out_size, 3, stride=2, padding=1),
                 nn.Conv2d(out_size, out_size, 3, padding=1)
@@ -63,9 +65,9 @@ class DoubleConvBlock(nn.Module):
             return self.model.forward(x)
         elif self.down_sample:
             if self.option == 'A':          # Zero padding
-                return x
+                return self.model.forward(x)
             elif self.option == 'B':        # Linear projection
-                return x
+                return self.model.forward(x)
         else:                               # Simple residual
             return self.model.forward(x) + x
 
@@ -73,8 +75,8 @@ class DoubleConvBlock(nn.Module):
 #############################
 #       Architectures       #
 #############################
-class Plain34Layer(nn.Module):
-    def __init__(self):
+class ResNet34(nn.Module):
+    def __init__(self, residual=True, option=None):
         super().__init__()
 
         modules = [
@@ -82,16 +84,16 @@ class Plain34Layer(nn.Module):
             nn.MaxPool2d(3, stride=2, padding=1)
         ]
 
-        modules += [DoubleConvBlock(64, 64, shortcut=False) for _ in range(3)]
+        modules += [DoubleConvBlock(64, 64, shortcut=residual, option=option) for _ in range(3)]
 
-        modules.append(DoubleConvBlock(64, 128, shortcut=False))
-        modules += [DoubleConvBlock(128, 128, shortcut=False) for _ in range(3)]
+        modules.append(DoubleConvBlock(64, 128, shortcut=residual, option=option))
+        modules += [DoubleConvBlock(128, 128, shortcut=residual, option=option) for _ in range(3)]
 
-        modules.append(DoubleConvBlock(128, 256, shortcut=False))
-        modules += [DoubleConvBlock(256, 256, shortcut=False) for _ in range(5)]
+        modules.append(DoubleConvBlock(128, 256, shortcut=residual, option=option))
+        modules += [DoubleConvBlock(256, 256, shortcut=residual, option=option) for _ in range(5)]
 
-        modules.append(DoubleConvBlock(256, 512, shortcut=False))
-        modules += [DoubleConvBlock(512, 512, shortcut=False) for _ in range(2)]
+        modules.append(DoubleConvBlock(256, 512, shortcut=residual, option=option))
+        modules += [DoubleConvBlock(512, 512, shortcut=residual, option=option) for _ in range(2)]
 
         modules += [
             nn.AvgPool2d(7),
@@ -106,6 +108,9 @@ class Plain34Layer(nn.Module):
         return self.model.forward(x)
 
 
+#####################
+#       Script      #
+#####################
 if __name__ == '__main__':
     def sanity_check(model, batch_size=256):
         name = type(model).__name__
@@ -118,5 +123,5 @@ if __name__ == '__main__':
         else:
             print(f' !  {name} produced shape {tuple(shape)} when ({batch_size}, 1000) was expected')
 
-    sanity_check(Plain34Layer())
-
+    sanity_check(ResNet34(residual=False))      # Plain 34-Layer
+    sanity_check(ResNet34(option='A'))
