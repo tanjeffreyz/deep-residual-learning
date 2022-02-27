@@ -31,10 +31,12 @@ from scratch.
 Upon downsampling, the number of feature maps doubles and the side length of each feature map is halved. Pad the original input channels by 
 concatenating extra zero-valued feature maps. Match the new feature map size by pooling using a 1x1 kernel with stride 2.
 
+
 **Option B: Linear Projections**
 
 Use a convolutional layer with 1x1 kernels and stride 2 to linearly project the `N` input channels to 
-`2N` output channels.
+`2N` output channels. Abstracting each feature map as a single element, the linear projection can be thought
+of as a simple 2D operation:
 
     C_OUT                                                   C_IN
     1       [   W(1,1)      ...         W(1,N)   ]          1       [   X_1   ]
@@ -47,6 +49,13 @@ Use a convolutional layer with 1x1 kernels and stride 2 to linearly project the 
             [                                    ]                  Where each X_i is a feature map
     2N      [   W(2N,1)     ...         W(2N,N)  ]
                         Weight Matrix
+
+The biases have been omitted for simplicity. For an output channel `i`, each of the `j` input channels
+is convolved using an independent filter with weights `W(i, j)` and the results are summed together.
+This process is repeated for each output channel `i ∈ [1 ... 2N]`.
+
+
+
 
 ## References
 
