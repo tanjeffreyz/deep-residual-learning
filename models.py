@@ -134,3 +134,24 @@ class ResNet34(nn.Module):
 
     def forward(self, x):
         return self.model.forward(x)
+
+
+class ResNet18(nn.Module):
+    def __init__(self, residual=True, option=None):
+        super().__init__()
+
+        self.model = nn.Sequential(
+            Header(),
+            DoubleConvBlock(64, 56, shortcut=residual),
+            DoubleConvBlock(64, 56, shortcut=residual),
+            DoubleConvBlock(64, 56, shortcut=residual, down_sample=True, option=option),
+            DoubleConvBlock(128, 28, shortcut=residual),
+            DoubleConvBlock(128, 28, shortcut=residual, down_sample=True, option=option),
+            DoubleConvBlock(256, 14, shortcut=residual),
+            DoubleConvBlock(256, 14, shortcut=residual, down_sample=True, option=option),
+            DoubleConvBlock(512, 7, shortcut=residual),
+            Footer()
+        )
+
+    def forward(self, x):
+        return self.model.forward(x)
