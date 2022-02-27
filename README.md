@@ -4,7 +4,7 @@ PyTorch implementations of the deep residual networks published in "Deep Residua
 ## Results
 
 ## Notes
-**Anatomy of a residual block**
+**Anatomy of a Residual Block**
 
             X -----------
             |           |
@@ -16,11 +16,10 @@ PyTorch implementations of the deep residual networks published in "Deep Residua
             |
            H(X)
 
-This entire block describes the underlying mapping H(X) = F(X) + X where F is the mapping
-described by the two weight layers. Rearranging yields F(X) = H(X) - X. This shows that,
-instead of directly mapping an input X to an output H(X), the weight layers are responsible
-for describing what to change, if anything, about the input X to reach the desired mapping
-H(X).
+This entire block describes the underlying mapping `H(X) = F(X) + X` where `F(X)` is the mapping
+described by the two weight layers. Rearranging yields `F(X) = H(X) - X`. This shows that,
+instead of directly mapping an input `X` to an output `H(X)`, the weight layers are responsible
+for describing what to change, if anything, about the input `X` to reach the desired mapping `H(X)`.
 
 Intuitively, it is easier to modify an existing function than to create a brand new one
 from scratch.
@@ -28,8 +27,8 @@ from scratch.
 
 **Option A: Zero-padding**
 
-Upon downsampling, the number of feature maps doubles and the side length of each feature map is halved. Pad the original input channels by 
-concatenating extra zero-valued feature maps. Match the new feature map size by pooling using a 1x1 kernel with stride 2.
+Upon downsampling, the number of feature maps doubles and the side length of each feature map is halved. Pad the original input's channels by 
+concatenating extra zero-valued feature maps. Match the new, smaller feature map size by pooling using a 1x1 kernel with stride 2.
 
 
 **Option B: Linear Projections**

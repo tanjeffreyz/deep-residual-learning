@@ -49,8 +49,7 @@ class Footer(nn.Module):
         self.model = nn.Sequential(
             nn.AvgPool2d(7),
             nn.Flatten(start_dim=1),
-            nn.Linear(512, 1000),
-            nn.Softmax(dim=1)
+            nn.Linear(512, 1000)
         )
 
     def forward(self, x):
