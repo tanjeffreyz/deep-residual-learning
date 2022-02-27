@@ -23,53 +23,91 @@ from scratch.
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
+
+#############################
+#        Components         #
+#############################
+class Header(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Conv2d(1, 64, 7, stride=2, padding=3),
+            nn.MaxPool2d(3, stride=2, padding=1)
+        )
+
+    def forward(self, x):
+        if x.shape[1] != 1 or x.shape[2] != 224 or x.shape[3] != 224:
+            raise ValueError(f'Expected input shape (*, 1, 224, 224), got {tuple(x.shape)}')
+        return self.model.forward(x)
+
+
+class Footer(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.AvgPool2d(7),
+            nn.Flatten(start_dim=1),
+            nn.Linear(512, 1000),
+            nn.Softmax(dim=1)
+        )
+
+    def forward(self, x):
+        if x.shape[2] != 7 or x.shape[3] != 7:
+            raise ValueError(f'Expected input shape (*, *, 7, 7), got {tuple(x.shape)}')
+        return self.model.forward(x)
 
 
 class DoubleConvBlock(nn.Module):
-    def __init__(self, in_size, out_size, shortcut=True, option=None):
+    def __init__(self, in_channels, in_size, down_sample=False, shortcut=True, option=None):
         super().__init__()
 
         """
         Padding is calculated as follows:
-            (IN - F + 2P) / S + 1 = OUT
-        IN = input dimension
+            (IN_DIM - F + 2P) / S + 1 = OUT_DIM
         F = filter size
-        P = single-side padding
+        P = padding
         S = stride
         """
 
         assert option in {None, 'A', 'B'}, f"'{option}' is an invalid option"
         self.in_size = in_size
-        self.out_size = out_size
+        self.down_sample = down_sample
         self.shortcut = shortcut
         self.option = option
-        if in_size == out_size:
+        if self.down_sample:
+            out_channels = in_channels * 2
             self.model = nn.Sequential(
-                nn.Conv2d(in_size, out_size, 3, padding=1),
-                nn.Conv2d(out_size, out_size, 3, padding=1)
+                nn.Conv2d(in_channels, out_channels, 3, stride=2, padding=1),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(),
+                nn.Conv2d(out_channels, out_channels, 3, padding=1),
+                nn.BatchNorm2d(out_channels)
             )
-            self.down_sample = False
-        elif in_size * 2 == out_size:
-            if self.shortcut:
-                assert option is not None, 'Must specify an option when downscaling with a shortcut'
-            self.model = nn.Sequential(
-                nn.Conv2d(in_size, out_size, 3, stride=2, padding=1),
-                nn.Conv2d(out_size, out_size, 3, padding=1)
-            )
-            self.down_sample = True
+            self.conv_downsample = nn.Conv2d(in_channels, out_channels, 1, stride=2)
         else:
-            raise ValueError('Either IN_SIZE == OUT_SIZE or IN_SIZE * 2 == OUT_SIZE must be True')
+            self.model = nn.Sequential(
+                nn.Conv2d(in_channels, in_channels, 3, padding=1),
+                nn.BatchNorm2d(in_channels),
+                nn.ReLU(),
+                nn.Conv2d(in_channels, in_channels, 3, padding=1),
+                nn.BatchNorm2d(in_channels)
+            )
 
     def forward(self, x):
         if not self.shortcut:               # No residual
-            return self.model.forward(x)
-        elif self.down_sample:
-            if self.option == 'A':          # Zero padding
-                return self.model.forward(x)
-            elif self.option == 'B':        # Linear projection
-                return self.model.forward(x)
-        else:                               # Simple residual
-            return self.model.forward(x) + x
+            result = self.model.forward(x)
+        elif not self.down_sample:          # Simple residual
+            result = self.model.forward(x) + x
+        elif self.option == 'A':            # Zero padding
+            y = self.model.forward(x)
+            x = F.max_pool2d(x, 1, 2)
+            padded = torch.cat((x, torch.zeros_like(x)), dim=1)
+            result = y + padded
+        else:                               # Linear projection
+            result = self.model.forward(x) + self.conv_downsample.forward(x)
+        return F.relu(result)
 
 
 #############################
@@ -79,49 +117,20 @@ class ResNet34(nn.Module):
     def __init__(self, residual=True, option=None):
         super().__init__()
 
-        modules = [
-            nn.Conv2d(1, 64, 7, stride=2, padding=3),
-            nn.MaxPool2d(3, stride=2, padding=1)
-        ]
+        modules = [Header()]
+        modules += [DoubleConvBlock(64, 56, shortcut=residual) for _ in range(3)]
 
-        modules += [DoubleConvBlock(64, 64, shortcut=residual, option=option) for _ in range(3)]
+        modules.append(DoubleConvBlock(64, 56, shortcut=residual, down_sample=True, option=option))
+        modules += [DoubleConvBlock(128, 28, shortcut=residual) for _ in range(3)]
 
-        modules.append(DoubleConvBlock(64, 128, shortcut=residual, option=option))
-        modules += [DoubleConvBlock(128, 128, shortcut=residual, option=option) for _ in range(3)]
+        modules.append(DoubleConvBlock(128, 28, shortcut=residual, down_sample=True, option=option))
+        modules += [DoubleConvBlock(256, 14, shortcut=residual) for _ in range(5)]
 
-        modules.append(DoubleConvBlock(128, 256, shortcut=residual, option=option))
-        modules += [DoubleConvBlock(256, 256, shortcut=residual, option=option) for _ in range(5)]
+        modules.append(DoubleConvBlock(256, 14, shortcut=residual, down_sample=True, option=option))
+        modules += [DoubleConvBlock(512, 7, shortcut=residual) for _ in range(2)]
 
-        modules.append(DoubleConvBlock(256, 512, shortcut=residual, option=option))
-        modules += [DoubleConvBlock(512, 512, shortcut=residual, option=option) for _ in range(2)]
-
-        modules += [
-            nn.AvgPool2d(7),
-            nn.Flatten(start_dim=1),
-            nn.Linear(512, 1000),
-            nn.Softmax(dim=1)
-        ]
-
+        modules += [Footer()]
         self.model = nn.Sequential(*modules)
 
     def forward(self, x):
         return self.model.forward(x)
-
-
-#####################
-#       Script      #
-#####################
-if __name__ == '__main__':
-    def sanity_check(model, batch_size=256):
-        name = type(model).__name__
-        print(f'\n[~] Checking {name}:')
-        test_input = torch.rand(batch_size, 1, 224, 224)
-        result = model.forward(test_input)
-        shape = result.shape
-        if len(shape) == 2 and shape[0] == batch_size and shape[1] == 1000:
-            print(f' -  {name} produced correct shape ({batch_size}, 1000)')
-        else:
-            print(f' !  {name} produced shape {tuple(shape)} when ({batch_size}, 1000) was expected')
-
-    sanity_check(ResNet34(residual=False))      # Plain 34-Layer
-    sanity_check(ResNet34(option='A'))

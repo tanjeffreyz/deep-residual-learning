@@ -1,1 +1,6 @@
-"""Trains various ResNet architectures against ImageNet."""
+"""Trains and validates various ResNet architectures against ImageNet."""
+
+import torch
+
+
+
