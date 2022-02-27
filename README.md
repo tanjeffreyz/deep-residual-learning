@@ -3,7 +3,7 @@ PyTorch implementations of the deep residual networks published in "Deep Residua
 
 
 
-<h2>Notes</h2>
+## Notes
 **Anatomy of a residual block**
 
             X -----------
@@ -26,7 +26,28 @@ Intuitively, it is easier to modify an existing function than to create a brand 
 from scratch.
 
 
+**Option A: Zero-padding**
 
-<h2>References</h2>
+Upon downsampling, the number of feature maps doubles and the side length of each feature map is halved. Pad the original input channels by 
+concatenating extra zero-valued feature maps. Match the new feature map size by pooling using a 1x1 kernel with stride 2.
+
+**Option B: Linear Projections**
+
+Use a convolutional layer with 1x1 kernels and stride 2 to linearly project the `N` input channels to 
+`2N` output channels.
+
+    C_OUT                                                   C_IN
+    1       [   W(1,1)      ...         W(1,N)   ]          1       [   X_1   ]
+    2       [   W(2,1)      ...         W(2,N)   ]          2       [   X_2   ]
+            [                                    ]          .       [    .    ]
+    .       [       .                       .    ]          .       [    .    ]
+    .       [       .                       .    ]     *    .       [    .    ] 
+    .       [       .                       .    ]          N       [   X_N   ]
+    .       [       .                       .    ]          
+            [                                    ]                  Where each X_i is a feature map
+    2N      [   W(2N,1)     ...         W(2N,N)  ]
+                        Weight Matrix
+
+## References
 
 [[1](https://arxiv.org/abs/1512.03385)] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun. *Deep Residual Learning for Image Recognition*. arXiv:1512.03385v1 [cs.CV] 10 Dec 2015.
