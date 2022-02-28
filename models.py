@@ -29,37 +29,26 @@ import torch.nn.functional as F
 #############################
 #        Components         #
 #############################
-class Header(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.model = nn.Sequential(
-            nn.Conv2d(1, 64, 7, stride=2, padding=3),
-            nn.MaxPool2d(3, stride=2, padding=1)
-        )
-
-    def forward(self, x):
-        if x.shape[1] != 1 or x.shape[2] != 224 or x.shape[3] != 224:
-            raise ValueError(f'Expected input shape (*, 1, 224, 224), got {tuple(x.shape)}')
-        return self.model.forward(x)
-
-
 class Footer(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels, in_size, out_labels):
         super().__init__()
+        self.in_channels = in_channels
+        self.in_size = in_size
         self.model = nn.Sequential(
-            nn.AvgPool2d(7),
+            nn.AvgPool2d(in_size),
             nn.Flatten(start_dim=1),
-            nn.Linear(512, 1000)
+            nn.Linear(in_channels, out_labels)
         )
 
     def forward(self, x):
-        if x.shape[2] != 7 or x.shape[3] != 7:
-            raise ValueError(f'Expected input shape (*, *, 7, 7), got {tuple(x.shape)}')
+        if x.shape[2] != self.in_size or x.shape[3] != self.in_size:
+            raise ValueError(f'Expected input shape (*, {self.in_channels}, {self.in_size}, {self.in_size}), '
+                             f'got {tuple(x.shape)}')
         return self.model.forward(x)
 
 
 class DoubleConvBlock(nn.Module):
-    def __init__(self, in_channels, in_size, down_sample=False, shortcut=True, option=None):
+    def __init__(self, in_channels, in_size, shortcut=True, down_sample=False, option=None):
         super().__init__()
 
         """
@@ -112,45 +101,81 @@ class DoubleConvBlock(nn.Module):
 #############################
 #       Architectures       #
 #############################
-class ResNet34(nn.Module):
-    def __init__(self, residual=True, option=None):
+def common_str(obj):
+    strings = [
+        obj.__class__.__name__,
+        str(obj.locals['n']),
+        'R' if obj.locals['residual'] else 'P'
+    ]
+    option = obj.locals['option']
+    if option is not None:
+        strings.append(option)
+    return '-'.join(strings)
+
+
+class CifarResNet(nn.Module):
+    def __init__(self, n, residual=True, option=None):
+        self.locals = locals()
         super().__init__()
 
-        modules = [Header()]
-        modules += [DoubleConvBlock(64, 56, shortcut=residual) for _ in range(3)]
+        num_layers = {20, 32, 44, 56, 110}
+        assert n in num_layers, f'N must be in {list(sorted(num_layers))}'
+        k = (n - 2) // 6
 
-        modules.append(DoubleConvBlock(64, 56, shortcut=residual, down_sample=True, option=option))
-        modules += [DoubleConvBlock(128, 28, shortcut=residual) for _ in range(3)]
+        modules = [nn.Conv2d(3, 16, 3, padding=1)]
+        modules += [DoubleConvBlock(16, 32, shortcut=residual) for _ in range(k)]
 
-        modules.append(DoubleConvBlock(128, 28, shortcut=residual, down_sample=True, option=option))
-        modules += [DoubleConvBlock(256, 14, shortcut=residual) for _ in range(5)]
+        modules.append(DoubleConvBlock(16, 32, shortcut=residual, down_sample=True, option=option))
+        modules += [DoubleConvBlock(32, 16, shortcut=residual) for _ in range(k - 1)]
 
-        modules.append(DoubleConvBlock(256, 14, shortcut=residual, down_sample=True, option=option))
-        modules += [DoubleConvBlock(512, 7, shortcut=residual) for _ in range(2)]
+        modules.append(DoubleConvBlock(32, 16, shortcut=residual, down_sample=True, option=option))
+        modules += [DoubleConvBlock(64, 8, shortcut=residual) for _ in range(k - 1)]
 
-        modules += [Footer()]
+        modules.append(Footer(64, 8, 10))
         self.model = nn.Sequential(*modules)
 
     def forward(self, x):
         return self.model.forward(x)
 
+    @staticmethod
+    def transform(x):
+        return x - torch.mean(x, (1, 2), keepdim=True)
 
-class ResNet18(nn.Module):
-    def __init__(self, residual=True, option=None):
+    def __str__(self):
+        return common_str(self)
+
+
+class ImageNetResNet(nn.Module):
+    def __init__(self, n, residual=True, option=None):
+        self.locals = locals()
         super().__init__()
 
-        self.model = nn.Sequential(
-            Header(),
-            DoubleConvBlock(64, 56, shortcut=residual),
-            DoubleConvBlock(64, 56, shortcut=residual),
-            DoubleConvBlock(64, 56, shortcut=residual, down_sample=True, option=option),
-            DoubleConvBlock(128, 28, shortcut=residual),
-            DoubleConvBlock(128, 28, shortcut=residual, down_sample=True, option=option),
-            DoubleConvBlock(256, 14, shortcut=residual),
-            DoubleConvBlock(256, 14, shortcut=residual, down_sample=True, option=option),
-            DoubleConvBlock(512, 7, shortcut=residual),
-            Footer()
-        )
+        assert n in {18, 34}, 'N must either be 18 or 34'
+        if n == 18:
+            layers = (2, 1, 1, 1)
+        else:
+            layers = (3, 3, 5, 2)
+
+        modules = [
+            nn.Conv2d(1, 64, 7, stride=2, padding=3),
+            nn.MaxPool2d(3, stride=2, padding=1)
+        ]
+        modules += [DoubleConvBlock(64, 56, shortcut=residual) for _ in range(layers[0])]
+
+        modules.append(DoubleConvBlock(64, 56, shortcut=residual, down_sample=True, option=option))
+        modules += [DoubleConvBlock(128, 28, shortcut=residual) for _ in range(layers[1])]
+
+        modules.append(DoubleConvBlock(128, 28, shortcut=residual, down_sample=True, option=option))
+        modules += [DoubleConvBlock(256, 14, shortcut=residual) for _ in range(layers[2])]
+
+        modules.append(DoubleConvBlock(256, 14, shortcut=residual, down_sample=True, option=option))
+        modules += [DoubleConvBlock(512, 7, shortcut=residual) for _ in range(layers[3])]
+
+        modules += [Footer(512, 7, 1000)]
+        self.model = nn.Sequential(*modules)
 
     def forward(self, x):
         return self.model.forward(x)
+
+    def __str__(self):
+        return common_str(self)

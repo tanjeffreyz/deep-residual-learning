@@ -1,30 +1,97 @@
-"""Trains and validates various ResNet architectures against ImageNet."""
+"""Trains and validates various ResNet architectures against CIFAR-10."""
 
 import torch
 import models
+import ssl
+import os
 import torchvision.transforms as T
-from torchvision.datasets.imagenet import ImageNet
-from torch.utils.data import DataLoader, random_split
+import numpy as np
+from torchvision.datasets.cifar import CIFAR10, CIFAR100
+from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from tqdm import tqdm
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f'[~] Using {device}')
+print(f'\n[~] Using {device}')
 
 writer = SummaryWriter()
 
-
-model = models.ResNet18(option='A')
+model = models.CifarResNet(20, option='A').to(device)
 loss_function = torch.nn.CrossEntropyLoss()
 learning_rate = 0.001
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-imagenet = ImageNet(
-    root='data',
-)
-test_partition = 50_000
-train_set, test_set = random_split(imagenet, (len(imagenet) - test_partition, test_partition))
+# Load dataset
+ssl._create_default_https_context = ssl._create_unverified_context      # Patch expired certificate
+transforms = T.Compose([
+    T.ToTensor(),
+    model.transform
+])
+train_set = CIFAR10(root='data', train=True, download=True, transform=transforms)
+test_set = CIFAR10(root='data', train=False, transform=transforms)
 
-print(next(train_set).shape)
+train_loader = DataLoader(train_set, batch_size=128, shuffle=True)
+test_loader = DataLoader(test_set, batch_size=128)
+
+# Create folders
+root = os.path.join('models', str(model))
+if not os.path.isdir(root):
+    os.makedirs(root)
+now = datetime.now()
+branch = os.path.join(root, now.strftime('%m_%d_%Y'), now.strftime('%H_%M_%S'))
+if not os.path.isdir(branch):
+    os.makedirs(branch)
+
+
+#####################
+#       Train       #
+#####################
+train_losses = np.empty((2, 0))
+test_losses = np.empty((2, 0))
+train_accuracies = np.empty((2, 0))
+test_accuracies = np.empty((2, 0))
+for epoch in tqdm(range(200), desc='Epoch'):
+    train_loss = 0
+    accuracy = 0
+    for data, labels in tqdm(train_loader, desc='Train', leave=False):
+        data = data.to(device)
+        labels = labels.to(device)
+
+        optimizer.zero_grad()
+        predictions = model.forward(data)
+        loss = loss_function(predictions, labels)
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item() / len(train_loader)
+        accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(test_set)
+        del data, labels
+    np.append(train_losses, [[epoch], [train_loss]])
+    np.append(train_accuracies, [[epoch], [accuracy]])
+
+    if epoch % 5 == 0:
+        with torch.no_grad():
+            test_loss = 0
+            accuracy = 0
+            for data, labels in tqdm(test_loader, desc='Test', leave=False):
+                data = data.to(device)
+                labels = labels.to(device)
+
+                predictions = model.forward(data)
+                loss = loss_function(predictions, labels)
+
+                test_loss += loss.item() / len(test_loader)
+                accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(test_set)
+                del data, labels
+        np.append(test_losses, [[epoch], [test_loss]])
+        np.append(test_accuracies, [[epoch], [accuracy]])
+
+        # Save metrics and checkpoint
+        np.save(os.path.join(branch, 'train_losses'), train_losses)
+        np.save(os.path.join(branch, 'test_losses'), test_losses)
+        np.save(os.path.join(branch, 'train_accuracies'), train_accuracies)
+        np.save(os.path.join(branch, 'test_accuracies'), test_accuracies)
+
+
