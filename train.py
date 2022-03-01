@@ -106,7 +106,8 @@ for epoch in tqdm(range(160), desc='Epoch'):
         writer.add_scalar('Error/test', 1 - accuracy, epoch)
 
         save_metrics()
-        torch.save(model.state_dict(), os.path.join(weight_dir, f'cp_{epoch}'))
+        if epoch % 20 == 0:
+            torch.save(model.state_dict(), os.path.join(weight_dir, f'cp_{epoch}'))
 
 save_metrics()
 torch.save(model.state_dict(), os.path.join(weight_dir, 'final'))
