@@ -6,7 +6,7 @@ import ssl
 import os
 import torchvision.transforms as T
 import numpy as np
-from torchvision.datasets.cifar import CIFAR10, CIFAR100
+from torchvision.datasets.cifar import CIFAR10
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
@@ -37,12 +37,11 @@ test_loader = DataLoader(test_set, batch_size=128)
 
 # Create folders
 root = os.path.join('models', str(model))
-if not os.path.isdir(root):
-    os.makedirs(root)
 now = datetime.now()
 branch = os.path.join(root, now.strftime('%m_%d_%Y'), now.strftime('%H_%M_%S'))
-if not os.path.isdir(branch):
-    os.makedirs(branch)
+weight_dir = os.path.join(branch, 'weights')
+if not os.path.isdir(weight_dir):
+    os.makedirs(weight_dir)
 
 
 #####################
@@ -66,10 +65,12 @@ for epoch in tqdm(range(200), desc='Epoch'):
         optimizer.step()
 
         train_loss += loss.item() / len(train_loader)
-        accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(test_set)
+        accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(train_set)
         del data, labels
-    np.append(train_losses, [[epoch], [train_loss]])
-    np.append(train_accuracies, [[epoch], [accuracy]])
+    np.append(train_losses, [[epoch], [train_loss]], axis=1)
+    np.append(train_accuracies, [[epoch], [accuracy]], axis=1)
+    writer.add_scalar('Loss/train', train_loss, epoch)
+    writer.add_scalar('Accuracy/train', accuracy, epoch)
 
     if epoch % 5 == 0:
         with torch.no_grad():
@@ -85,13 +86,16 @@ for epoch in tqdm(range(200), desc='Epoch'):
                 test_loss += loss.item() / len(test_loader)
                 accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(test_set)
                 del data, labels
-        np.append(test_losses, [[epoch], [test_loss]])
-        np.append(test_accuracies, [[epoch], [accuracy]])
+        np.append(test_losses, [[epoch], [test_loss]], axis=1)
+        np.append(test_accuracies, [[epoch], [accuracy]], axis=1)
+        writer.add_scalar('Loss/test', test_loss, epoch)
+        writer.add_scalar('Accuracy/test', accuracy, epoch)
 
         # Save metrics and checkpoint
         np.save(os.path.join(branch, 'train_losses'), train_losses)
         np.save(os.path.join(branch, 'test_losses'), test_losses)
         np.save(os.path.join(branch, 'train_accuracies'), train_accuracies)
         np.save(os.path.join(branch, 'test_accuracies'), test_accuracies)
+        torch.save(model.state_dict(), os.path.join(weight_dir, f'cp_{epoch}'))
 
-
+torch.save(model.state_dict(), os.path.join(weight_dir, 'final'))
