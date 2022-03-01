@@ -18,8 +18,8 @@ writer = SummaryWriter()
 
 model = models.CifarResNet(20, option='A').to(device)
 loss_function = torch.nn.CrossEntropyLoss()
-learning_rate = 0.001
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1, weight_decay=0.0001, momentum=0.9)
+scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=(32_000, 48_000), gamma=0.1)
 
 # Load dataset
 ssl._create_default_https_context = ssl._create_unverified_context      # Patch expired certificate
@@ -47,8 +47,8 @@ if not os.path.isdir(weight_dir):
 #####################
 train_losses = np.empty((2, 0))
 test_losses = np.empty((2, 0))
-train_accuracies = np.empty((2, 0))
-test_accuracies = np.empty((2, 0))
+train_errors = np.empty((2, 0))
+test_errors = np.empty((2, 0))
 for epoch in tqdm(range(200), desc='Epoch'):
     train_loss = 0
     accuracy = 0
@@ -61,16 +61,17 @@ for epoch in tqdm(range(200), desc='Epoch'):
         loss = loss_function(predictions, labels)
         loss.backward()
         optimizer.step()
+        scheduler.step()
 
         train_loss += loss.item() / len(train_loader)
         accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(train_set)
         del data, labels
     np.append(train_losses, [[epoch], [train_loss]], axis=1)
-    np.append(train_accuracies, [[epoch], [accuracy]], axis=1)
+    np.append(train_errors, [[epoch], [1 - accuracy]], axis=1)
     writer.add_scalar('Loss/train', train_loss, epoch)
-    writer.add_scalar('Accuracy/train', accuracy, epoch)
+    writer.add_scalar('Error/train', 1 - accuracy, epoch)
 
-    if epoch % 5 == 0:
+    if epoch % 4 == 0:
         with torch.no_grad():
             test_loss = 0
             accuracy = 0
@@ -85,15 +86,15 @@ for epoch in tqdm(range(200), desc='Epoch'):
                 accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(test_set)
                 del data, labels
         np.append(test_losses, [[epoch], [test_loss]], axis=1)
-        np.append(test_accuracies, [[epoch], [accuracy]], axis=1)
+        np.append(test_errors, [[epoch], [1 - accuracy]], axis=1)
         writer.add_scalar('Loss/test', test_loss, epoch)
-        writer.add_scalar('Accuracy/test', accuracy, epoch)
+        writer.add_scalar('Error/test', 1 - accuracy, epoch)
 
         # Save metrics and checkpoint
         np.save(os.path.join(branch, 'train_losses'), train_losses)
         np.save(os.path.join(branch, 'test_losses'), test_losses)
-        np.save(os.path.join(branch, 'train_accuracies'), train_accuracies)
-        np.save(os.path.join(branch, 'test_accuracies'), test_accuracies)
+        np.save(os.path.join(branch, 'train_errors'), train_errors)
+        np.save(os.path.join(branch, 'test_errors'), test_errors)
         torch.save(model.state_dict(), os.path.join(weight_dir, f'cp_{epoch}'))
 
 torch.save(model.state_dict(), os.path.join(weight_dir, 'final'))
