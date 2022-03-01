@@ -4,6 +4,7 @@ import torch
 import models
 import ssl
 import os
+import argparse
 import torchvision.transforms as T
 import numpy as np
 from torchvision.datasets.cifar import CIFAR10
@@ -13,16 +14,23 @@ from datetime import datetime
 from tqdm import tqdm
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('n', type=int, choices=(20, 32, 44, 56, 110))
+parser.add_argument('-r', '--residual', action='store_true')
+parser.add_argument('-o', '--option', type=str, choices=('A', 'B'), default=None)
+args = parser.parse_args()
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 writer = SummaryWriter()
+now = datetime.now()
 
-model = models.CifarResNet(20, option='A').to(device)
+model = models.CifarResNet(args.n, residual=args.residual, option=args.option).to(device)
 loss_function = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.1, weight_decay=0.0001, momentum=0.9)
 scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=(32_000, 48_000), gamma=0.1)
 
 # Load dataset
-ssl._create_default_https_context = ssl._create_unverified_context      # Patch expired certificate
+ssl._create_default_https_context = ssl._create_unverified_context      # Patch expired certificate error
 transforms = T.Compose([
     T.ToTensor(),
     model.transform
@@ -35,21 +43,28 @@ test_loader = DataLoader(test_set, batch_size=128)
 
 # Create folders
 root = os.path.join('models', str(model))
-now = datetime.now()
 branch = os.path.join(root, now.strftime('%m_%d_%Y'), now.strftime('%H_%M_%S'))
 weight_dir = os.path.join(branch, 'weights')
 if not os.path.isdir(weight_dir):
     os.makedirs(weight_dir)
 
-
-#####################
-#       Train       #
-#####################
 train_losses = np.empty((2, 0))
 test_losses = np.empty((2, 0))
 train_errors = np.empty((2, 0))
 test_errors = np.empty((2, 0))
-for epoch in tqdm(range(200), desc='Epoch'):
+
+
+def save_metrics():
+    np.save(os.path.join(branch, 'train_losses'), train_losses)
+    np.save(os.path.join(branch, 'test_losses'), test_losses)
+    np.save(os.path.join(branch, 'train_errors'), train_errors)
+    np.save(os.path.join(branch, 'test_errors'), test_errors)
+
+
+#####################
+#       Train       #
+#####################
+for epoch in tqdm(range(160), desc='Epoch'):
     train_loss = 0
     accuracy = 0
     for data, labels in tqdm(train_loader, desc='Train', leave=False):
@@ -90,11 +105,8 @@ for epoch in tqdm(range(200), desc='Epoch'):
         writer.add_scalar('Loss/test', test_loss, epoch)
         writer.add_scalar('Error/test', 1 - accuracy, epoch)
 
-        # Save metrics and checkpoint
-        np.save(os.path.join(branch, 'train_losses'), train_losses)
-        np.save(os.path.join(branch, 'test_losses'), test_losses)
-        np.save(os.path.join(branch, 'train_errors'), train_errors)
-        np.save(os.path.join(branch, 'test_errors'), test_errors)
+        save_metrics()
         torch.save(model.state_dict(), os.path.join(weight_dir, f'cp_{epoch}'))
 
+save_metrics()
 torch.save(model.state_dict(), os.path.join(weight_dir, 'final'))
