@@ -14,8 +14,6 @@ from tqdm import tqdm
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f'\n[~] Using {device}')
-
 writer = SummaryWriter()
 
 model = models.CifarResNet(20, option='A').to(device)
