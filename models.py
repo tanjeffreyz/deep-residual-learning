@@ -65,6 +65,8 @@ class DoubleConvBlock(nn.Module):
         self.shortcut = shortcut
         self.option = option
         if self.down_sample:
+            if shortcut:
+                assert option is not None, 'Must specify either option A or B when downsampling using a shortcut'
             out_channels = in_channels * 2
             self.model = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, 3, stride=2, padding=1),

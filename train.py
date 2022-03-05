@@ -31,12 +31,21 @@ scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=(32_000, 
 
 # Load dataset
 ssl._create_default_https_context = ssl._create_unverified_context      # Patch expired certificate error
-transforms = T.Compose([
-    T.ToTensor(),
-    model.transform
-])
-train_set = CIFAR10(root='data', train=True, download=True, transform=transforms)
-test_set = CIFAR10(root='data', train=False, transform=transforms)
+train_set = CIFAR10(
+    root='data', train=True, download=True,
+    transform=T.Compose([
+        T.ToTensor(),
+        model.transform,
+        T.RandomCrop(32, padding=4)
+    ])
+)
+test_set = CIFAR10(
+    root='data', train=False,
+    transform=T.Compose([
+        T.ToTensor(),
+        model.transform
+    ])
+)
 
 train_loader = DataLoader(train_set, batch_size=128, shuffle=True)
 test_loader = DataLoader(test_set, batch_size=128)
@@ -76,13 +85,13 @@ for epoch in tqdm(range(160), desc='Epoch'):
         loss = loss_function(predictions, labels)
         loss.backward()
         optimizer.step()
-        scheduler.step()
+        scheduler.step()        # Step scheduler every iteration, not epoch
 
         train_loss += loss.item() / len(train_loader)
         accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(train_set)
         del data, labels
-    np.append(train_losses, [[epoch], [train_loss]], axis=1)
-    np.append(train_errors, [[epoch], [1 - accuracy]], axis=1)
+    train_losses = np.append(train_losses, [[epoch], [train_loss]], axis=1)
+    train_errors = np.append(train_errors, [[epoch], [1 - accuracy]], axis=1)
     writer.add_scalar('Loss/train', train_loss, epoch)
     writer.add_scalar('Error/train', 1 - accuracy, epoch)
 
@@ -100,8 +109,8 @@ for epoch in tqdm(range(160), desc='Epoch'):
                 test_loss += loss.item() / len(test_loader)
                 accuracy += labels.eq(torch.argmax(predictions, 1)).sum().item() / len(test_set)
                 del data, labels
-        np.append(test_losses, [[epoch], [test_loss]], axis=1)
-        np.append(test_errors, [[epoch], [1 - accuracy]], axis=1)
+        test_losses = np.append(test_losses, [[epoch], [test_loss]], axis=1)
+        test_errors = np.append(test_errors, [[epoch], [1 - accuracy]], axis=1)
         writer.add_scalar('Loss/test', test_loss, epoch)
         writer.add_scalar('Error/test', 1 - accuracy, epoch)
 
