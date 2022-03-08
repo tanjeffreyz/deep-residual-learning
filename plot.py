@@ -70,7 +70,7 @@ def side_by_side(show=False):
     plain, residual = axs
 
     sizes = (20, 32, 44, 56)
-    colors = ('orange', 'blue', 'green', 'red')
+    colors = ('orange', 'blue', 'red', 'green')
     plain_paths = (
         'models/CifarResNet-20-P/03_06_2022/19_13_20',
         'models/CifarResNet-32-P/03_06_2022/22_03_09',
