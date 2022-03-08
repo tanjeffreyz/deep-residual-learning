@@ -1,29 +1,13 @@
-"""
-Anatomy of a residual block
-
-            X -----------
-            |           |
-        weight layer    |
-            |           |
-        weight layer    |
-            |           |
-           (+) <---------
-            |
-           H(X)
-
-This entire block describes the underlying mapping H(X) = F(X) + X where F is the mapping
-described by the two weight layers. Rearranging yields F(X) = H(X) - X. This shows that,
-instead of directly mapping an input X to an output H(X), the weight layers are responsible
-for describing what to change, if anything, about the input X to reach the desired mapping
-H(X).
-
-Intuitively, it is easier to modify an existing function than to create a brand new one
-from scratch.
-"""
+"""Various ResNet architectures."""
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+def init_weights(module):
+    if isinstance(module, nn.Conv2d):
+        torch.nn.init.kaiming_normal_(module.weight.data, nonlinearity='relu')
 
 
 #############################
@@ -66,7 +50,8 @@ class DoubleConvBlock(nn.Module):
         self.option = option
         if self.down_sample:
             if shortcut:
-                assert option is not None, 'Must specify either option A or B when downsampling using a shortcut'
+                assert option is not None, 'Must specify either option A or B when ' \
+                                           'downsampling with a residual shortcut'
             out_channels = in_channels * 2
             self.model = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, 3, stride=2, padding=1),
@@ -135,6 +120,7 @@ class CifarResNet(nn.Module):
 
         modules.append(Footer(64, 8, 10))
         self.model = nn.Sequential(*modules)
+        self.model.apply(init_weights)              # Applies init_weights recursively to all submodules
 
     def forward(self, x):
         return self.model.forward(x)
@@ -175,6 +161,7 @@ class ImageNetResNet(nn.Module):
 
         modules += [Footer(512, 7, 1000)]
         self.model = nn.Sequential(*modules)
+        self.model.apply(init_weights)
 
     def forward(self, x):
         return self.model.forward(x)

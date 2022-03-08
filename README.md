@@ -1,7 +1,22 @@
 <h1 align="center">Deep Residual Learning for Image Recognition</h1>
 PyTorch implementations of the deep residual networks published in "Deep Residual Learning for Image Recognition" by Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun.
 
+
+## Methods
+The images were preprocessed by subtracting the mean pixel value from each pixel. Additionally,
+images are padded by 4 pixels on each side and a random 32x32 crop is used for training.
+
+Stochastic gradient descent (SGD) was used as the optimizer with a weight decay of 0.0001 and
+momentum of 0.9. The weights were initialized using the Kaiming normal distribution as described in
+[2], and batch normalization following [3] was used after each convolutional layer in DoubleConvBlock.
+
+
 ## Results
+#### Plain vs Residual
+![](plain_vs_residual.png)
+
+
+![](side_by_side.png)
 
 ## Notes
 #### Anatomy of a Residual Block
@@ -63,4 +78,11 @@ outperforms Option B.
 
 ## References
 
-[[1](https://arxiv.org/abs/1512.03385)] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun. *Deep Residual Learning for Image Recognition*. arXiv:1512.03385v1 [cs.CV] 10 Dec 2015.
+[[1](https://arxiv.org/abs/1512.03385)] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun. _Deep Residual Learning for Image Recognition_. 
+arXiv:1512.03385v1 [cs.CV] 10 Dec 2015.
+
+[[2](https://arxiv.org/abs/1502.01852)] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun. _Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification_.
+arXiv:1502.01852v1 [cs.CV] 6 Feb 2015.
+
+[[3](https://arxiv.org/abs/1502.03167)] Sergey Ioffe, Christian Szegedy. _Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift_.
+arXiv:1502.03167v3 [cs.LG] 2 Mar 2015.

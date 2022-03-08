@@ -27,7 +27,11 @@ now = datetime.now()
 model = models.CifarResNet(args.n, residual=args.residual, option=args.option).to(device)
 loss_function = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=0.1, weight_decay=0.0001, momentum=0.9)
-scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=(32_000, 48_000), gamma=0.1)
+scheduler = torch.optim.lr_scheduler.MultiStepLR(
+    optimizer,                      # Mutates the optimizer at each milestone
+    milestones=(32_000, 48_000),
+    gamma=0.1                       # Multiplies learning rate by 0.1 at every milestone
+)
 
 # Load dataset
 ssl._create_default_https_context = ssl._create_unverified_context      # Patch expired certificate error
@@ -36,7 +40,7 @@ train_set = CIFAR10(
     transform=T.Compose([
         T.ToTensor(),
         model.transform,
-        T.RandomCrop(32, padding=4)
+        T.RandomCrop(32, padding=4)         # Pad each side by 4 pixels and randomly sample 32x32 image
     ])
 )
 test_set = CIFAR10(
@@ -51,9 +55,13 @@ train_loader = DataLoader(train_set, batch_size=128, shuffle=True)
 test_loader = DataLoader(test_set, batch_size=128)
 
 # Create folders
-root = os.path.join('models', str(model))
-branch = os.path.join(root, now.strftime('%m_%d_%Y'), now.strftime('%H_%M_%S'))
-weight_dir = os.path.join(branch, 'weights')
+root = os.path.join(
+    'models',
+    str(model),
+    now.strftime('%m_%d_%Y'),
+    now.strftime('%H_%M_%S')
+)
+weight_dir = os.path.join(root, 'weights')
 if not os.path.isdir(weight_dir):
     os.makedirs(weight_dir)
 
@@ -64,10 +72,10 @@ test_errors = np.empty((2, 0))
 
 
 def save_metrics():
-    np.save(os.path.join(branch, 'train_losses'), train_losses)
-    np.save(os.path.join(branch, 'test_losses'), test_losses)
-    np.save(os.path.join(branch, 'train_errors'), train_errors)
-    np.save(os.path.join(branch, 'test_errors'), test_errors)
+    np.save(os.path.join(root, 'train_losses'), train_losses)
+    np.save(os.path.join(root, 'test_losses'), test_losses)
+    np.save(os.path.join(root, 'train_errors'), train_errors)
+    np.save(os.path.join(root, 'test_errors'), test_errors)
 
 
 #####################
