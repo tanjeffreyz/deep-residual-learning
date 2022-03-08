@@ -71,7 +71,7 @@ size by pooling using a 1x1 kernel with stride 2.
 
 Use a convolutional layer with 1x1 kernels and stride 2 to linearly project the `N` input channels to 
 `2N` output channels. Abstracting each feature map as a single element, the linear projection can be thought
-of as a simple 2D operation:
+of as a 2D operation:
 
     C_OUT                                                   C_IN
     1       [   W(1,1)      ...         W(1,N)   ]          1       [   X_1   ]
@@ -81,8 +81,8 @@ of as a simple 2D operation:
     .       [       .                       .    ]     *    .       [    .    ] 
     .       [       .                       .    ]          N       [   X_N   ]
     .       [       .                       .    ]          
-            [                                    ]                  Where each X_i is a feature map
-    2N      [   W(2N,1)     ...         W(2N,N)  ]
+            [                                    ]                  Each X_i is the sum of all 1x1 convolution 
+    2N      [   W(2N,1)     ...         W(2N,N)  ]                  inputs (stride 2) from the ith feature map
                         Weight Matrix
 
 The biases have been omitted for simplicity. For an output channel `i`, each of the `j` input channels

@@ -1,12 +1,12 @@
 """Trains and validates various ResNet architectures against CIFAR-10."""
 
 import torch
-import models
 import ssl
 import os
 import argparse
 import torchvision.transforms as T
 import numpy as np
+from models import CifarResNet
 from torchvision.datasets.cifar import CIFAR10
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -19,14 +19,20 @@ parser.add_argument('n', type=int, choices=(20, 32, 44, 56, 110))
 parser.add_argument('-r', '--residual', action='store_true')
 parser.add_argument('-o', '--option', type=str, choices=('A', 'B'), default=None)
 args = parser.parse_args()
+large = args.n >= 56
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 writer = SummaryWriter()
 now = datetime.now()
 
-model = models.CifarResNet(args.n, residual=args.residual, option=args.option).to(device)
+model = CifarResNet(args.n, residual=args.residual, option=args.option).to(device)
 loss_function = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=0.1, weight_decay=0.0001, momentum=0.9)
+optimizer = torch.optim.SGD(
+    model.parameters(),
+    lr=0.01 if large else 0.1,
+    weight_decay=0.0001,
+    momentum=0.9
+)
 scheduler = torch.optim.lr_scheduler.MultiStepLR(
     optimizer,                      # Mutates the optimizer at each milestone
     milestones=(32_000, 48_000),
@@ -82,6 +88,10 @@ def save_metrics():
 #       Train       #
 #####################
 for epoch in tqdm(range(160), desc='Epoch'):
+    if large and epoch == 1:        # Set learning rate back to 0.1 after warming up training
+        for g in optimizer.param_groups:
+            g['lr'] = 0.1
+
     train_loss = 0
     accuracy = 0
     for data, labels in tqdm(train_loader, desc='Train', leave=False):
