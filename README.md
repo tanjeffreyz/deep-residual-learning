@@ -13,7 +13,9 @@ momentum of 0.9. The weights were initialized using the Kaiming normal distribut
 
 ## Results
 #### Plain vs Residual
-![](plain_vs_residual.png)
+<div align="center">
+    <img src="plain_vs_residual.png" width="600px"></img>
+</div>
 
 
 ![](side_by_side.png)
