@@ -32,8 +32,33 @@ def plain_vs_residual(show=False):
     )
     format_plot(ax)
     plot(plt, info)
-    plt.tight_layout()
+    fig.tight_layout()
     plt.savefig('plain_vs_residual')
+    if show:
+        plt.show()
+
+
+def plain_vs_residual_table(show=False):
+    fig, ax = plt.subplots(figsize=(2, 2))
+    fig.patch.set_visible(False)
+    ax.axis('off')
+    ax.axis('tight')
+
+    info = (
+        ('models/CifarResNet-20-P/03_06_2022/19_13_20',     'Plain-20'),
+        ('models/CifarResNet-20-R-A/03_06_2022/20_20_51',   'Option A'),
+        ('models/CifarResNet-20-R-B/03_07_2022/19_58_56',   'Option B')
+    )
+    min_test = []
+    for path, label in info:
+        test_errors = np.load(os.path.join(path, 'test_errors.npy'))
+        min_test.append(f'{np.min(test_errors[1] * 100):.2f}%')
+    ax.table(cellText=list(zip([x[1] for x in info], min_test)),
+             colLabels=('Model', 'Test Error'),
+             loc="center")
+
+    fig.tight_layout()
+    plt.savefig('plain_vs_residual_table')
     if show:
         plt.show()
 
@@ -60,7 +85,7 @@ def side_by_side(show=False):
     )
     plot(residual, zip(residual_paths, [f'Residual-{x}' for x in sizes], colors))
 
-    plt.tight_layout()
+    fig.tight_layout()
     plt.savefig('side_by_side')
     if show:
         plt.show()
@@ -69,4 +94,5 @@ def side_by_side(show=False):
 if __name__ == '__main__':
     s = False
     plain_vs_residual(show=s)
+    plain_vs_residual_table(show=s)
     side_by_side(show=s)
