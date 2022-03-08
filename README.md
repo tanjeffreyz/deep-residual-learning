@@ -1,28 +1,36 @@
 <h1 align="center">Deep Residual Learning for Image Recognition</h1>
-PyTorch implementations of the deep residual networks published in "Deep Residual Learning for Image Recognition" by Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun.
+PyTorch implementations of the deep residual networks published in "Deep Residual Learning for 
+Image Recognition" by Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun.
 
 
 ## Methods
 The images were preprocessed by subtracting the mean pixel value from each pixel. Additionally,
 images were padded by 4 pixels on each side and a random 32x32 crop is used for training.
 
-Stochastic gradient descent (SGD) was used as the optimizer with a weight decay of 0.0001 and
-momentum of 0.9. The weights were initialized using the Kaiming normal distribution as described in
+Stochastic gradient descent (SGD) was used as the optimizer with a weight decay of 0.0001, a momentum of 0.9,
+and an initial learning rate of 0.1. A MultiStepLR scheduler was used to reduce the learning rate by a factor of 10
+at 32k and 48k iterations.
+The weights were initialized using the Kaiming normal distribution as described in
 [2], and batch normalization following [3] was used after each convolutional layer in DoubleConvBlock.
 
 
 ## Results
-#### Plain vs Residual
+Bold lines represent test error while the lighter lines represent training error. 
+
+### Plain vs Residual
 <div align="center">
-    <img src="plain_vs_residual.png" width="450px" />
-    <img src="plain_vs_residual_table.png" align="top"/>
+    <img src="results/plain_vs_residual.png" width="450px" />
+    <img src="results/plain_vs_residual_table.png" align="top"/>
 </div>
 
+Both residual networks clearly outperform the plain baseline, which confirms the findings in [1].
 
-![](side_by_side.png)
+
+### Increasing Depth
+![](results/side_by_side.png)
 
 ## Notes
-#### Anatomy of a Residual Block
+### Anatomy of a Residual Block
 
             X -----------
             |           |
@@ -43,14 +51,16 @@ Intuitively, it is easier to modify an existing function than to create a brand 
 from scratch.
 
 
-#### Option A: Zero-padding
+### Option A: Zero-padding
 
-Upon downsampling, the number of feature maps doubles and the side length of each feature map is halved. Pad the original input's channels by 
-concatenating extra zero-valued feature maps. Match the new, smaller feature map size by pooling using a 1x1 kernel with stride 2.
+Upon downsampling, the number of feature maps doubles and the side length of each feature map is halved. 
+Pad the original input's channels by concatenating extra zero-valued feature maps. Match the new, smaller feature map 
+size by pooling using a 1x1 kernel with stride 2.
 
-[1] argued that Option A performed slightly worse than Option B because "the zero-padded dimensions in A indeed have no residual learning". 
+[1] argued that Option A performed slightly worse than Option B because "the zero-padded dimensions in A indeed 
+have no residual learning". 
 
-#### Option B: Linear Projections
+### Option B: Linear Projections
 
 Use a convolutional layer with 1x1 kernels and stride 2 to linearly project the `N` input channels to 
 `2N` output channels. Abstracting each feature map as a single element, the linear projection can be thought
@@ -72,7 +82,7 @@ The biases have been omitted for simplicity. For an output channel `i`, each of 
 is convolved using an independent filter with weights `W(i, j)` and the results are summed together.
 This process is repeated for each output channel `i ∈ [1 ... 2N]`.
 
-#### Option C: More Linear Projections
+### Option C: More Linear Projections
 Use the linear projections described in Option B for every shortcut, not just those that down sample.
 This introduces more trainable parameters, which [1] argues to be the reason that Option C marginally
 outperforms Option B.

@@ -5,6 +5,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
+ROOT = 'results'
+
+
 def plot(graph, info):
     for path, label, color in info:
         test_errors = np.load(os.path.join(path, 'test_errors.npy'))
@@ -33,7 +36,7 @@ def plain_vs_residual(show=False):
     format_plot(ax)
     plot(plt, info)
     fig.tight_layout()
-    plt.savefig('plain_vs_residual')
+    plt.savefig(os.path.join(ROOT, 'plain_vs_residual'))
     if show:
         plt.show()
 
@@ -53,12 +56,14 @@ def plain_vs_residual_table(show=False):
     for path, label in info:
         test_errors = np.load(os.path.join(path, 'test_errors.npy'))
         min_test.append(f'{np.min(test_errors[1] * 100):.2f}%')
-    ax.table(cellText=list(zip([x[1] for x in info], min_test)),
-             colLabels=('Model', 'Test Error'),
-             loc="center")
+    ax.table(
+        cellText=list(zip([x[1] for x in info], min_test)),
+        colLabels=('Model', 'Test Error'),
+        loc='center',
+    )
 
     fig.tight_layout()
-    plt.savefig('plain_vs_residual_table')
+    plt.savefig(os.path.join(ROOT, 'plain_vs_residual_table'))
     if show:
         plt.show()
 
@@ -86,7 +91,7 @@ def side_by_side(show=False):
     plot(residual, zip(residual_paths, [f'Residual-{x}' for x in sizes], colors))
 
     fig.tight_layout()
-    plt.savefig('side_by_side')
+    plt.savefig(os.path.join(ROOT, 'side_by_side'))
     if show:
         plt.show()
 
