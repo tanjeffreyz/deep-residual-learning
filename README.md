@@ -23,11 +23,20 @@ Bold lines represent test error while the lighter lines represent training error
     <img src="results/plain_vs_residual_table.png" align="top"/>
 </div>
 
-Both residual networks clearly outperform the plain baseline, which confirms the findings in [1].
+Both residual networks clearly outperform the plain baseline, which confirms the findings in [1]. Option B
+outperforms Option A by a small margin, which [1] reasons to be because "the zero-padded dimensions in A indeed 
+have no residual learning". 
 
 
 ### Increasing Depth
 ![](results/side_by_side.png)
+
+To show the effects of residual shortcuts on increasingly deeper networks, plain networks are compared to their 
+residual counterparts. The residual networks use Option A, which means they have exactly the same number of weights as
+their plain counterparts.
+
+Clearly, the accuracy of the plain networks suffer from increased depth, whereas the residual networks only become more
+accurate. 
 
 ## Notes
 ### Anatomy of a Residual Block
@@ -57,8 +66,6 @@ Upon downsampling, the number of feature maps doubles and the side length of eac
 Pad the original input's channels by concatenating extra zero-valued feature maps. Match the new, smaller feature map 
 size by pooling using a 1x1 kernel with stride 2.
 
-[1] argued that Option A performed slightly worse than Option B because "the zero-padded dimensions in A indeed 
-have no residual learning". 
 
 ### Option B: Linear Projections
 

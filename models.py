@@ -5,9 +5,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def init_weights(module):
-    if isinstance(module, nn.Conv2d):
-        torch.nn.init.kaiming_normal_(module.weight.data, nonlinearity='relu')
+def init_weights(m):
+    def f1(module):
+        if isinstance(module, nn.Conv2d):
+            torch.nn.init.kaiming_normal_(module.weight.data, nonlinearity='relu')
+
+    def f2(module):
+        if isinstance(module, DoubleConvBlock):
+            ds = module.conv_downsample
+            if ds:
+                ds.weight.data.fill_(1 / module.in_channels)
+                ds.bias.data.fill_(0)
+
+    m.apply(f1)         # Applies weight initialization recursively to all submodules
+    m.apply(f2)
 
 
 #############################
@@ -44,10 +55,12 @@ class DoubleConvBlock(nn.Module):
         """
 
         assert option in {None, 'A', 'B'}, f"'{option}' is an invalid option"
+        self.in_channels = in_channels
         self.in_size = in_size
         self.down_sample = down_sample
         self.shortcut = shortcut
         self.option = option
+        self.conv_downsample = None
         if self.down_sample:
             if shortcut:
                 assert option is not None, 'Must specify either option A or B when ' \
@@ -120,7 +133,7 @@ class CifarResNet(nn.Module):
 
         modules.append(Footer(64, 8, 10))
         self.model = nn.Sequential(*modules)
-        self.model.apply(init_weights)              # Applies init_weights recursively to all submodules
+        init_weights(self)
 
     def forward(self, x):
         return self.model.forward(x)
@@ -161,7 +174,7 @@ class ImageNetResNet(nn.Module):
 
         modules += [Footer(512, 7, 1000)]
         self.model = nn.Sequential(*modules)
-        self.model.apply(init_weights)
+        init_weights(self)
 
     def forward(self, x):
         return self.model.forward(x)

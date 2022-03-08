@@ -13,7 +13,7 @@ def plot(graph, info):
         test_errors = np.load(os.path.join(path, 'test_errors.npy'))
         train_errors = np.load(os.path.join(path, 'train_errors.npy'))
         graph.plot(test_errors[0], test_errors[1] * 100, label=label, color=color)
-        graph.plot(train_errors[0], train_errors[1] * 100, color=color, alpha=0.25)
+        graph.plot(train_errors[0], train_errors[1] * 100, color=color, alpha=0.15)
     graph.legend()
 
 
@@ -79,14 +79,16 @@ def side_by_side(show=False):
     plain_paths = (
         'models/CifarResNet-20-P/03_06_2022/19_13_20',
         'models/CifarResNet-32-P/03_06_2022/22_03_09',
-        'models/CifarResNet-44-P/03_07_2022/17_48_36'
+        'models/CifarResNet-44-P/03_07_2022/17_48_36',
+        'models/CifarResNet-56-P/03_08_2022/09_49_18'
     )
     plot(plain, zip(plain_paths, [f'Plain-{x}' for x in sizes], colors))
 
     residual_paths = (
         'models/CifarResNet-20-R-A/03_06_2022/20_20_51',
         'models/CifarResNet-32-R-A/03_06_2022/23_27_14',
-        'models/CifarResNet-44-R-A/03_07_2022/21_10_40'
+        'models/CifarResNet-44-R-A/03_07_2022/21_10_40',
+        'models/CifarResNet-56-R-A/03_08_2022/12_02_54'
     )
     plot(residual, zip(residual_paths, [f'Residual-{x}' for x in sizes], colors))
 
