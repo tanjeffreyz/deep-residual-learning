@@ -10,7 +10,7 @@ def plot(graph, info):
         test_errors = np.load(os.path.join(path, 'test_errors.npy'))
         train_errors = np.load(os.path.join(path, 'train_errors.npy'))
         graph.plot(test_errors[0], test_errors[1] * 100, label=label, color=color)
-        graph.plot(train_errors[0], train_errors[1] * 100, color=color, alpha=0.1)
+        graph.plot(train_errors[0], train_errors[1] * 100, color=color, alpha=0.25)
     graph.legend()
 
 

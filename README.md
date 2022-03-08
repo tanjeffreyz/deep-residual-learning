@@ -4,7 +4,7 @@ PyTorch implementations of the deep residual networks published in "Deep Residua
 
 ## Methods
 The images were preprocessed by subtracting the mean pixel value from each pixel. Additionally,
-images are padded by 4 pixels on each side and a random 32x32 crop is used for training.
+images were padded by 4 pixels on each side and a random 32x32 crop is used for training.
 
 Stochastic gradient descent (SGD) was used as the optimizer with a weight decay of 0.0001 and
 momentum of 0.9. The weights were initialized using the Kaiming normal distribution as described in
