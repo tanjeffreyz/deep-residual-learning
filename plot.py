@@ -69,7 +69,7 @@ def plain_vs_residual_table(show=False):
 
 
 def side_by_side(show=False):
-    fig, axs = plt.subplots(1, 2, figsize=(12, 4))
+    fig, axs = plt.subplots(1, 2, figsize=(12, 5))
     for p in axs:
         format_plot(p)
     plain, residual = axs
