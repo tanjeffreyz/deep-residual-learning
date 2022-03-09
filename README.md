@@ -82,8 +82,8 @@ of as a 2D operation:
     .       [       .                       .    ]     *    .       [    .    ] 
     .       [       .                       .    ]          N       [   X_N   ]
     .       [       .                       .    ]          
-            [                                    ]                  Each X_i is the sum of all 1x1 convolution 
-    2N      [   W(2N,1)     ...         W(2N,N)  ]                  inputs (stride 2) from the ith feature map
+            [                                    ]               Each X_i is the sum of all 1x1 convolution 
+    2N      [   W(2N,1)     ...         W(2N,N)  ]               inputs (stride 2) from the ith feature map
                         Weight Matrix
 
 The biases have been omitted for simplicity. For an output channel `i`, each of the `j` input channels
