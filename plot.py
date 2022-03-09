@@ -36,7 +36,7 @@ def plain_vs_residual(show=False):
     format_plot(ax)
     plot(plt, info)
     fig.tight_layout()
-    plt.savefig(os.path.join(ROOT, 'plain_vs_residual'))
+    plt.savefig(os.path.join(ROOT, 'plain_vs_residual'), dpi=1200)
     if show:
         plt.show()
 
@@ -63,7 +63,7 @@ def plain_vs_residual_table(show=False):
     )
 
     fig.tight_layout()
-    plt.savefig(os.path.join(ROOT, 'plain_vs_residual_table'))
+    plt.savefig(os.path.join(ROOT, 'plain_vs_residual_table'), dpi=1200)
     if show:
         plt.show()
 
@@ -93,7 +93,7 @@ def side_by_side(show=False):
     plot(residual, zip(residual_paths, [f'Residual-{x}' for x in sizes], colors))
 
     fig.tight_layout()
-    plt.savefig(os.path.join(ROOT, 'side_by_side'))
+    plt.savefig(os.path.join(ROOT, 'side_by_side'), dpi=1200)
     if show:
         plt.show()
 

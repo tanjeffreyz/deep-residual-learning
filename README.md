@@ -32,8 +32,8 @@ have no residual learning".
 ![](results/side_by_side.png)
 
 To show the effects of residual shortcuts on increasingly deeper networks, plain networks are compared to their 
-residual counterparts. The residual networks use Option A, which means they have exactly the same number of weights as
-their plain counterparts.
+residual counterparts. The residual networks use Option A, which means they have exactly the same number of trainable
+parameters as their plain counterparts.
 
 Clearly, the accuracy of the plain networks suffer from increased depth, whereas the residual networks only become more
 accurate. 
