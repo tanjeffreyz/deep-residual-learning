@@ -88,7 +88,7 @@ def side_by_side(show=False):
         'models/CifarResNet-20-R-A/03_06_2022/20_20_51',
         'models/CifarResNet-32-R-A/03_06_2022/23_27_14',
         'models/CifarResNet-44-R-A/03_07_2022/21_10_40',
-        'models/CifarResNet-56-R-A/03_08_2022/12_02_54'
+        'models/CifarResNet-56-R-A/03_08_2022/14_36_35'
     )
     plot(residual, zip(residual_paths, [f'Residual-{x}' for x in sizes], colors))
 

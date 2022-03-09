@@ -59,15 +59,15 @@ for describing what to change, if anything, about the input `X` to reach the des
 Intuitively, it is easier to modify an existing function than to create a brand new one
 from scratch.
 
-
-### Option A: Zero-padding
+### Residual Shortcuts
+#### Option A: Zero-padding
 
 Upon downsampling, the number of feature maps doubles and the side length of each feature map is halved. 
 Pad the original input's channels by concatenating extra zero-valued feature maps. Match the new, smaller feature map 
 size by pooling using a 1x1 kernel with stride 2.
 
 
-### Option B: Linear Projections
+#### Option B: Linear Projections
 
 Use a convolutional layer with 1x1 kernels and stride 2 to linearly project the `N` input channels to 
 `2N` output channels. Abstracting each feature map as a single element, the linear projection can be thought
@@ -89,7 +89,7 @@ The biases have been omitted for simplicity. For an output channel `i`, each of 
 is convolved using an independent filter with weights `W(i, j)` and the results are summed together.
 This process is repeated for each output channel `i ∈ [1 ... 2N]`.
 
-### Option C: More Linear Projections
+#### Option C: More Linear Projections
 Use the linear projections described in Option B for every shortcut, not just those that down sample.
 This introduces more trainable parameters, which [1] argues to be the reason that Option C marginally
 outperforms Option B.
