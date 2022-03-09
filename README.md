@@ -20,7 +20,7 @@ Bold lines represent test error while the lighter lines represent training error
 ### Plain vs Residual
 <div align="center">
     <img src="results/plain_vs_residual.png" width="450px" />
-    <img src="results/plain_vs_residual_table.png" align="top"/>
+    <img src="results/plain_vs_residual_table.png" width="200px" align="top"/>
 </div>
 
 Both residual networks clearly outperform the plain baseline, which confirms the findings in [1]. Option B
