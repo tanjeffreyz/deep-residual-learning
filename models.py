@@ -140,7 +140,7 @@ class CifarResNet(nn.Module):
 
     @staticmethod
     def transform(x):
-        return x - torch.mean(x, (1, 2), keepdim=True)
+        return x - torch.mean(x, (2, 3), keepdim=True)
 
     def __str__(self):
         return common_str(self)
