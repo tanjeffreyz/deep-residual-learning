@@ -73,6 +73,7 @@ Use a convolutional layer with 1x1 kernels and stride 2 to linearly project the 
 `2N` output channels. Abstracting each feature map as a single element, the linear projection can be thought
 of as a 2D operation:
 
+
     C_OUT                                                   C_IN
     1       [   W(1,1)      ...         W(1,N)   ]          1       [   X_1   ]
     2       [   W(2,1)      ...         W(2,N)   ]          2       [   X_2   ]
@@ -88,6 +89,25 @@ of as a 2D operation:
 The biases have been omitted for simplicity. For an output channel `i`, each of the `j` input channels
 is convolved using an independent filter with weights `W(i, j)` and the results are summed together.
 This process is repeated for each output channel `i ∈ [1 ... 2N]`.
+
+_MODIFICATION_: 
+
+Instead of initializing this convolutional layer's weights using the Kaiming normal distribution,
+I instead filled them with <code>1.0 / N</code> where `N` is the number of input channels, and set the biases to `0.0`. 
+
+Let's call this linear projection layer `W`, 
+and the input to this DoubleConvBlock `X`. The output of this block is `F(X) = H(X) + W(X)` where `H(X)` is the 
+mapping described by this block's inner convolutional layers. To fit the above residual equation, we can see `W(X)` 
+should be close to `X` in order to preserve the residual nature of the shortcut. Intuitively, `W`'s weights should not
+have a zero mean, as `W(X)` would have a zero response and `F(X) = H(X) + 0`.
+
+To get one output channel, `W` convolves each of the `N` input channels using its own 1x1 kernel and sums together the resulting
+feature maps. Thus, for one output channel, 
+<code>
+    W(X) = w<sub>1</sub>X<sub>1</sub> + ... + w<sub>N</sub>X<sub>N</sub>
+    = w(X<sub>1</sub> + ... + X<sub>N</sub>)
+</code> if all the weights <code>w<sub>i</sub></code> are intialized to the same value `w`.
+In order to get `W(X)` close to `X`, it makes sense to take the average, or set `w = 1.0 / N`.
 
 #### Option C: More Linear Projections
 Use the linear projections described in Option B for every shortcut, not just those that down sample.
