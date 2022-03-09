@@ -17,7 +17,7 @@ def plot(graph, info):
         test_errors = np.load(os.path.join(path, 'test_errors.npy'))
         train_errors = np.load(os.path.join(path, 'train_errors.npy'))
         graph.plot(test_errors[0], test_errors[1] * 100, label=label, color=color)
-        graph.plot(train_errors[0], train_errors[1] * 100, color=color, alpha=0.15)
+        graph.plot(train_errors[0], train_errors[1] * 100, color=color, alpha=0.2)
     graph.legend()
 
 
@@ -30,6 +30,9 @@ def format_plot(graph):
     graph.spines['right'].set_visible(False)
 
 
+#############################
+#       Plot Functions      #
+#############################
 def plain_vs_residual(show=False):
     fig, ax = plt.subplots(1, 1)
     info = (
@@ -41,7 +44,6 @@ def plain_vs_residual(show=False):
     plot(plt, info)
     fig.tight_layout()
     save(fig, 'plain_vs_residual')
-    # plt.savefig(os.path.join(ROOT, 'plain_vs_residual'), dpi=1200)
     if show:
         plt.show()
 
@@ -69,7 +71,6 @@ def plain_vs_residual_table(show=False):
 
     fig.tight_layout()
     save(fig, 'plain_vs_residual_table')
-    # plt.savefig(os.path.join(ROOT, 'plain_vs_residual_table'), dpi=1200)
     if show:
         plt.show()
 
@@ -100,7 +101,6 @@ def side_by_side(show=False):
 
     fig.tight_layout()
     save(fig, 'side_by_side')
-    # plt.savefig(os.path.join(ROOT, 'side_by_side'), dpi=1200)
     if show:
         plt.show()
 
