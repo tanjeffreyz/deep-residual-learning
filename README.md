@@ -105,9 +105,9 @@ To get one output channel, `W` convolves each of the `N` input channels using it
 feature maps. Thus, for one output channel, 
 <code>
     W(X) = w<sub>1</sub>X<sub>1</sub> + ... + w<sub>N</sub>X<sub>N</sub>
-    = w(X<sub>1</sub> + ... + X<sub>N</sub>)
-</code> if all the weights <code>w<sub>i</sub></code> are intialized to the same value `w`.
-In order to get `W(X)` close to `X`, it makes sense to take the average, or set `w = 1.0 / N`.
+    = c(X<sub>1</sub> + ... + X<sub>N</sub>)
+</code> if all the weights <code>w<sub>i</sub></code> are intialized to the same value `c`.
+In order to get `W(X)` close to `X`, it makes sense to take the average, or set `c = 1.0 / N`.
 
 #### Option C: More Linear Projections
 Use the linear projections described in Option B for every shortcut, not just those that down sample.
