@@ -34,12 +34,11 @@ optimizer = torch.optim.SGD(
     momentum=0.9
 )
 scheduler = torch.optim.lr_scheduler.MultiStepLR(
-    optimizer,                      # Mutates the optimizer at each milestone
+    optimizer,
     milestones=(32_000, 48_000),
     gamma=0.1                       # Multiplies learning rate by 0.1 at every milestone
 )
 
-# Load dataset
 ssl._create_default_https_context = ssl._create_unverified_context      # Patch expired certificate error
 train_set = CIFAR10(
     root='data', train=True, download=True,
