@@ -1,5 +1,7 @@
 <!--
 tags: mlpi
+title: Deep Residual Learning for Image Recognition
+authors: Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
 category: Residual Neural Networks
 -->
 
