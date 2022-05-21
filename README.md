@@ -1,6 +1,6 @@
 <!--
 tags: mlpi
-category: Residual Networks
+category: Residual Neural Networks
 -->
 
 
