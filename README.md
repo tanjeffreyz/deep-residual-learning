@@ -2,7 +2,7 @@
 mlpi
 title: Deep Residual Learning for Image Recognition
 authors: Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
-images: results/plain_vs_residual.png, results/side_by_side.png
+images: results/side_by_side.png, results/plain_vs_residual.png, 
 category: Architectures/Residual Neural Networks
 --> 
 
