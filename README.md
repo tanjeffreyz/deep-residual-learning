@@ -4,7 +4,7 @@ title: Deep Residual Learning for Image Recognition
 authors: Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
 images: results/side_by_side.png, results/plain_vs_residual.png, 
 category: Architectures/Residual Neural Networks
--->
+--> 
 
 
 <h1 align="center">Deep Residual Learning for Image Recognition</h1>
