@@ -16,8 +16,8 @@ Image Recognition" by Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun.
 The images were preprocessed by subtracting the mean pixel value from each pixel. Additionally,
 images were padded by 4 pixels on each side and a random 32x32 crop is used for training.
 
-Stochastic gradient descent (SGD) was used as the optimizer with a weight decay of 0.0001, a momentum of 0.9,
-and an initial learning rate of 0.1. A MultiStepLR scheduler was used to reduce the learning rate by a factor of 10
+Stochastic gradient descent (SGD) was used as the optimizer with a `weight_decay` of 0.0001, a `momentum` of 0.9,
+and an initial `lr` of 0.1. A `MultiStepLR` scheduler was used to reduce the learning rate by a factor of 10
 at 32k and 48k iterations.
 The weights were initialized using the Kaiming normal distribution as described in
 [2], and batch normalization following [3] was used after each convolutional layer in DoubleConvBlock.
