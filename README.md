@@ -112,12 +112,9 @@ should be close to `X` in order to preserve the residual nature of the shortcut.
 have a zero mean, as `W(X)` would have a zero response and `F(X) = H(X) + 0`.
 
 To get one output channel, `W` convolves each of the `N` input channels using its own 1x1 kernel and sums together the resulting
-feature maps. Thus, for one output channel, 
-<code>
-    W(X) = w<sub>1</sub>X<sub>1</sub> + ... + w<sub>N</sub>X<sub>N</sub>
-    = c(X<sub>1</sub> + ... + X<sub>N</sub>)
-</code> if all the weights <code>w<sub>i</sub></code> are intialized to the same value `c`.
-In order to get `W(X)` close to `X`, it makes sense to take the average, or set `c = 1.0 / N`.
+feature maps. Thus, for one output channel, $W(X) = w_1 X_1 + ... + w_N X_N = c(X_1 + ... + X_N)$ if all the weights 
+$w_i$ are intialized to the same value `c`.
+In order to get $W(X)$ close to $X$, it makes sense to take the average, or set `c = 1.0 / N`.
 
 #### Option C: More Linear Projections
 Use the linear projections described in Option B for every shortcut, not just those that down sample.
