@@ -46,7 +46,7 @@ residual counterparts. The residual networks use Option A, which means they have
 parameters as their plain counterparts.
 
 Clearly, the accuracy of the plain networks suffer from increased depth, whereas the residual networks only become more
-accurate. 
+accurate as depth increases. 
 
 ## Notes
 ### Anatomy of a Residual Block
